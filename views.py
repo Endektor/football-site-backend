@@ -181,7 +181,7 @@ def tournaments_list(request):
 
 
 @api_view(['GET'])
-def customers_detail(request, id):
+def tournaments_detail(request, id):
     """
     Retrieve a tournament by id.
     """
