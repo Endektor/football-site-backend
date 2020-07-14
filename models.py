@@ -34,18 +34,6 @@ class Player(models.Model):
         return self.first_name
 
 
-class TournamentData(models.Model):
-    name = models.CharField('name', max_length=255)
-    games_amount = models.IntegerField('games', default=0)
-    wins_amount = models.IntegerField('wins', default=0)
-    draws_amount = models.IntegerField('draws', default=0)
-    defeats_amount = models.IntegerField('defeats', default=0)
-    team = models.ForeignKey('Team', on_delete=models.DO_NOTHING, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
 class Team(models.Model):
     name = models.CharField('name', max_length=255)
     games_amount = models.IntegerField('games', default=0)
@@ -53,7 +41,6 @@ class Team(models.Model):
     draws_amount = models.IntegerField('draws', default=0)
     defeats_amount = models.IntegerField('defeats', default=0)
     description = models.TextField(blank=True, null=True)
-    tournament = models.ForeignKey('Tournament', on_delete=models.DO_NOTHING, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -61,6 +48,20 @@ class Team(models.Model):
 
 class Tournament(models.Model):
     name = models.CharField('name', max_length=255)
+    members = models.ManyToManyField(Team, through='Membership')
 
     def __str__(self):
         return self.name
+
+
+class Membership(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.DO_NOTHING)
+    tournament = models.ForeignKey(Tournament, on_delete=models.DO_NOTHING)
+    games_amount = models.IntegerField('games', default=0)
+    wins_amount = models.IntegerField('wins', default=0)
+    draws_amount = models.IntegerField('draws', default=0)
+    defeats_amount = models.IntegerField('defeats', default=0)
+
+    def __str__(self):
+        return self.team.name + " " + self.tournament.name
+
