@@ -97,7 +97,7 @@ def players_detail(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = PostSerializer(player, context={'request': request})
+        serializer = PlayerSerializer(player, context={'request': request})
         return Response(serializer.data)
 
 
@@ -140,12 +140,14 @@ def teams_detail(request, id):
     """
     try:
         team = Team.objects.get(id=id)
+        players_in_team = Player.objects.filter(team=id)
     except Post.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = TeamSerializer(team, context={'request': request})
-        return Response(serializer.data)
+        player_serializer = PlayerSerializer(players_in_team, context={'request': request}, many=True)
+        return Response({'data': serializer.data, 'players': player_serializer.data})
 
 
 @api_view(['GET'])
