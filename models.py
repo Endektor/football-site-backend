@@ -56,7 +56,7 @@ class Tournament(models.Model):
 
 class Membership(models.Model):
     team = models.ForeignKey(Team, on_delete=models.DO_NOTHING)
-    tournament = models.ForeignKey(Tournament, on_delete=models.DO_NOTHING)
+    tournament = models.ForeignKey(Tournament, related_name='member_detail', on_delete=models.DO_NOTHING)
     games_amount = models.IntegerField('games', default=0)
     wins_amount = models.IntegerField('wins', default=0)
     draws_amount = models.IntegerField('draws', default=0)
