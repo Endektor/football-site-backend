@@ -63,7 +63,7 @@ def players_list(request):
         data = []
         next_page = 1
         previous_page = 1
-        players = Player.objects.all()
+        players = Player.objects.all().order_by('id')
         page = request.GET.get('page', 1)
         paginator = Paginator(players, 10)
         try:
@@ -76,6 +76,8 @@ def players_list(request):
         serializer = PlayerSerializer(data, context={'request': request}, many=True)
         if data.has_next():
             next_page = data.next_page_number()
+        else:
+            next_page = page
         if data.has_previous():
             previous_page = data.previous_page_number()
 
