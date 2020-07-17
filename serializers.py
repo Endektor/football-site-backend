@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Player, Team, Tournament, Membership
+from .models import Post, Player, Team, Tournament, Membership, Match
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -13,22 +13,25 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('id', 'first_name', 'last_name', 'description', 'games_amount', 'goals_amount',
-                  'passes_amount', 'weight', 'height', 'age', 'position', 'team')
+        fields = ('id', 'img', 'first_name', 'last_name', 'patronymic', 'wins_amount', 'draws_amount',
+                  'defeats_amount', 'goals_amount', 'passes_amount', 'weight', 'height', 'born_on',
+                  'position', 'team')
 
 
 class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ('id', 'name', 'games_amount', 'wins_amount', 'draws_amount', 'defeats_amount', 'description')
+        fields = ('id', 'img', 'name', 'goals_amount', 'miss_amount', 'wins_amount',
+                  'draws_amount', 'defeats_amount', 'score', 'difference', 'description')
 
 
 class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ('id', 'team', 'tournament', 'games_amount', 'wins_amount', 'draws_amount', 'defeats_amount')
+        fields = ('id', 'team', 'tournament', 'goals_amount', 'miss_amount', 'wins_amount',
+                  'draws_amount', 'defeats_amount', 'score', 'difference')
 
 
 class TournamentSerializer(serializers.ModelSerializer):
@@ -38,3 +41,10 @@ class TournamentSerializer(serializers.ModelSerializer):
         model = Tournament
         fields = ('id', 'name', 'members', 'member_detail')
         depth = 1
+
+
+class MatchSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Match
+        fields = ('id', 'date', 'tournament', 'team1', 'team2', 'team1_goals', 'team2_goals')

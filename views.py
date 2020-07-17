@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Post, Player, Team, Tournament, Membership
+from .models import Post, Player, Team, Tournament, Membership, Match
 from .serializers import *
 
 
@@ -112,7 +112,7 @@ def teams_list(request):
         data = []
         next_page = 1
         previous_page = 1
-        teams = Team.objects.all()
+        teams = Team.objects.all().order_by("score", "difference")
         page = request.GET.get('page', 1)
         paginator = Paginator(teams, 10)
         try:
@@ -142,14 +142,16 @@ def teams_detail(request, id):
     """
     try:
         team = Team.objects.get(id=id)
+        matches = Match.objects.all().filter(team1=id) + Match.objects.all().filter(team1=id)
+        matches = matches.order_by("date")
         players_in_team = Player.objects.filter(team=id)
-    except Post.DoesNotExist:
+    except Team.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = TeamSerializer(team, context={'request': request})
         player_serializer = PlayerSerializer(players_in_team, context={'request': request}, many=True)
-        return Response({'data': serializer.data, 'players': player_serializer.data})
+        return Response({'data': serializer.data, 'players': player_serializer.data, 'matches': matches.data})
 
 
 @api_view(['GET'])
@@ -191,7 +193,7 @@ def tournaments_detail(request, id):
     """
     try:
         tournament = Tournament.objects.get(id=id)
-    except Post.DoesNotExist:
+    except Tournament.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
@@ -208,7 +210,7 @@ def memberships_list(request):
         data = []
         next_page = 1
         previous_page = 1
-        memberships = Membership.objects.all()
+        memberships = Membership.objects.all().order_by("score", "difference")
         page = request.GET.get('page', 1)
         paginator = Paginator(memberships, 10)
         try:
@@ -238,9 +240,36 @@ def memberships_detail(request, id):
     """
     try:
         membership = Membership.objects.get(id=id)
-    except Post.DoesNotExist:
+    except Membership.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = MembershipSerializer(membership, context={'request': request})
+        return Response(serializer.data)
+
+
+@api_view(['GET'])
+def matches_list(request):
+    """
+    List of matches.
+    """
+    if request.method == 'GET':
+        matches = Match.objects.all()
+        serializer = MatchSerializer(matches, context={'request': request}, many=True)
+
+        return Response({'data': serializer.data})
+
+
+@api_view(['GET'])
+def matches_detail(request, id):
+    """
+    Retrieve a player by id.
+    """
+    try:
+        match = Match.objects.get(id=id)
+    except Match.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = MatchSerializer(match, context={'request': request})
         return Response(serializer.data)
