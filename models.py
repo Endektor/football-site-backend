@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date
+from django.db.models import Q
 
 
 class Post(models.Model):   # новость
@@ -39,7 +40,7 @@ class Player(models.Model):
 
 
 class Team(models.Model):
-    img = models.ImageField('Аватар', null=True, upload_to='static/images')
+    img = models.ImageField('Аватар', null=True, upload_to='media/api/teams/static/images')
     name = models.CharField('Название', max_length=255)
     goals_amount = models.IntegerField('Количество голов', default=0)
     miss_amount = models.IntegerField('Пропущенные', default=0)
@@ -55,7 +56,7 @@ class Team(models.Model):
 
 
 class Tournament(models.Model):
-    img = models.ImageField('Аватар', null=True, upload_to='static/images')
+    img = models.ImageField('Аватар', null=True, upload_to='media/api/tournaments/static/images')
     name = models.CharField('Название', max_length=255)
     members = models.ManyToManyField(Team, verbose_name='Команда', through='Membership', null=True)
 
@@ -104,6 +105,9 @@ class Match(models.Model):
         super(Match, self).save(*args, **kwargs)
         goals, miss, wins, draws, defeats = [0 for i in range(5)]
         matches = Match.objects.all()
+
+        # проходится по матчам, в которых есть команда1 и подсчитывает общее значение. Далее аналогично со второй
+        # командой и участниками турниров
         for match in matches.filter(team1=self.team1.id):
             goals += match.team1_goals
             miss += match.team2_goals
@@ -113,10 +117,28 @@ class Match(models.Model):
                 draws += 1
             else:
                 defeats += 1
-        team1 = Team.objects.get(id=self.team1.id)
-        self.object_update(team1, goals, miss, wins, draws, defeats)
+        for match in matches.filter(team2=self.team1.id):
+            goals += match.team2_goals
+            miss += match.team1_goals
+            if match.team2_goals > match.team1_goals:
+                wins += 1
+            elif match.team2_goals == match.team1_goals:
+                draws += 1
+            else:
+                defeats += 1
+        team = Team.objects.get(id=self.team1.id)
+        self.object_update(team, goals, miss, wins, draws, defeats)
 
         goals, miss, wins, draws, defeats = [0 for i in range(5)]
+        for match in matches.filter(team1=self.team2.id):
+            goals += match.team1_goals
+            miss += match.team2_goals
+            if match.team1_goals > match.team2_goals:
+                wins += 1
+            elif match.team1_goals == match.team2_goals:
+                draws += 1
+            else:
+                defeats += 1
         for match in matches.filter(team2=self.team2.id):
             goals += match.team2_goals
             miss += match.team1_goals
@@ -126,52 +148,59 @@ class Match(models.Model):
                 draws += 1
             else:
                 defeats += 1
-        team2 = Team.objects.get(id=self.team2.id)
-        self.object_update(team2, goals, miss, wins, draws, defeats)
+        team = Team.objects.get(id=self.team2.id)
+        self.object_update(team, goals, miss, wins, draws, defeats)
 
-        goals, miss, wins, draws, defeats = [0 for i in range(5)]
-        for match in matches.filter(team2=self.team2.id):
-            goals += match.team2_goals
-            miss += match.team1_goals
-            if match.team2_goals > match.team1_goals:
-                wins += 1
-            elif match.team2_goals == match.team1_goals:
-                draws += 1
-            else:
-                defeats += 1
-        team2 = Team.objects.get(id=self.team2.id)
-        self.object_update(team2, goals, miss, wins, draws, defeats)
-
-        Tournaments = Tournament.objects.all()
-        for tournament in Tournaments:
+        tournaments = Tournament.objects.all()
+        for tournament in tournaments:
             goals, miss, wins, draws, defeats = [0 for i in range(5)]
-            for match in matches.filter(team1=self.team1.id, tournament=tournament.id):
-                goals += match.team1_goals
-                miss += match.team2_goals
-                if match.team1_goals > match.team2_goals:
-                    wins += 1
-                elif match.team1_goals == match.team2_goals:
-                    draws += 1
-                else:
-                    defeats += 1
             try:
+                for match in matches.filter(team1=self.team1.id, tournament=tournament.id):
+                    goals += match.team1_goals
+                    miss += match.team2_goals
+                    if match.team1_goals > match.team2_goals:
+                        wins += 1
+                    elif match.team1_goals == match.team2_goals:
+                        draws += 1
+                    else:
+                        defeats += 1
+                for match in matches.filter(team2=self.team1.id, tournament=tournament.id):
+                    goals += match.team2_goals
+                    miss += match.team1_goals
+                    if match.team2_goals > match.team1_goals:
+                        wins += 1
+                    elif match.team2_goals == match.team1_goals:
+                        draws += 1
+                    else:
+                        defeats += 1
+
                 membership = Membership.objects.get(team=self.team1.id, tournament=tournament.id)
                 self.object_update(membership, goals, miss, wins, draws, defeats)
             except:
                 pass
 
-        for tournament in Tournaments:
+        for tournament in tournaments:
             goals, miss, wins, draws, defeats = [0 for i in range(5)]
-            for match in matches.filter(team1=self.team2.id, tournament=tournament.id):
-                goals += match.team1_goals
-                miss += match.team2_goals
-                if match.team1_goals > match.team2_goals:
-                    wins += 1
-                elif match.team1_goals == match.team2_goals:
-                    draws += 1
-                else:
-                    defeats += 1
             try:
+                for match in matches.filter(team1=self.team2.id, tournament=tournament.id):
+                    goals += match.team1_goals
+                    miss += match.team2_goals
+                    if match.team1_goals > match.team2_goals:
+                        wins += 1
+                    elif match.team1_goals == match.team2_goals:
+                        draws += 1
+                    else:
+                        defeats += 1
+                for match in matches.filter(team2=self.team2.id, tournament=tournament.id):
+                    goals += match.team2_goals
+                    miss += match.team1_goals
+                    if match.team2_goals > match.team1_goals:
+                        wins += 1
+                    elif match.team2_goals == match.team1_goals:
+                        draws += 1
+                    else:
+                        defeats += 1
+
                 membership = Membership.objects.get(team=self.team2.id, tournament=tournament.id)
                 self.object_update(membership, goals, miss, wins, draws, defeats)
             except:

@@ -16,7 +16,7 @@ def posts_list(request):
         data = []
         next_page = 1
         previous_page = 1
-        posts = Post.objects.all()
+        posts = Post.objects.all().order_by('-date')
         page = request.GET.get('page', 1)
         paginator = Paginator(posts, 10)
         try:
