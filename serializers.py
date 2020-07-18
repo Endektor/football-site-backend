@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, Player, Team, Tournament, Membership, Match
+from .models import Post, Player, Team, Tournament, Membership, Match, Tour
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -26,6 +26,23 @@ class TeamSerializer(serializers.ModelSerializer):
                   'draws_amount', 'defeats_amount', 'score', 'difference', 'description')
 
 
+class MatchSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Match
+        fields = ('id', 'date', 'team1', 'team2', 'team1_goals', 'team2_goals', 'tour')
+        depth = 2
+
+
+class TourSerializer(serializers.ModelSerializer):
+    matches = MatchSerializer(many=True)
+
+    class Meta:
+        model = Tour
+        fields = ('id', 'name', 'tournament', 'matches')
+        depth = 2
+
+
 class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -36,15 +53,9 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 class TournamentSerializer(serializers.ModelSerializer):
     member_detail = MembershipSerializer(many=True, read_only=True)
+    tour = TourSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tournament
-        fields = ('id', 'name', 'members', 'member_detail')
-        depth = 1
-
-
-class MatchSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Match
-        fields = ('id', 'date', 'tournament', 'team1', 'team2', 'team1_goals', 'team2_goals')
+        fields = ('id', 'img', 'name', 'members', 'member_detail', 'tour')
+        depth = 2

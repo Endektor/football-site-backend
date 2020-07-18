@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import Post, Player, Team, Tournament, Membership, Match
+from .models import Post, Player, Team, Tournament, Membership, Match, Tour
 from .serializers import *
 
 
@@ -16,7 +16,7 @@ def posts_list(request):
         data = []
         next_page = 1
         previous_page = 1
-        posts = Post.objects.all().order_by('-date')
+        posts = Post.objects.all().order_by('-createdAt')
         page = request.GET.get('page', 1)
         paginator = Paginator(posts, 10)
         try:
@@ -191,14 +191,20 @@ def tournaments_detail(request, id):
     """
     Retrieve a tournament by id.
     """
+    # serializered_tour, tours, serializered_match = None, None, None
     try:
         tournament = Tournament.objects.get(id=id)
     except Tournament.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    # for i in tournament.tour:
 
     if request.method == 'GET':
-        serializer = TournamentSerializer(tournament, context={'request': request})
-        return Response(serializer.data)
+        serializered = TournamentSerializer(tournament, context={'request': request})
+        # tours = Tour.objects.filter(tournament=id)
+        # serializered_tour = TourSerializer(tours, context={'request': request})
+        # matches = Match.objects.filter(tour=tour.id)
+        # serializered_match = MatchSerializer(matches, context={'request': request})
+        return Response({'data': [serializered.data]})
 
 
 @api_view(['GET'])

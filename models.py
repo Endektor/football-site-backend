@@ -11,6 +11,10 @@ class Post(models.Model):   # новость
     def __str__(self):
         return self.title
 
+    class Meta:
+        verbose_name = 'Новость'
+        verbose_name_plural = 'Новости'
+
 
 class Player(models.Model):
     universal = 'universal'
@@ -38,6 +42,10 @@ class Player(models.Model):
     def __str__(self):
         return self.first_name
 
+    class Meta:
+        verbose_name = 'Игрок'
+        verbose_name_plural = 'Игроки'
+
 
 class Team(models.Model):
     img = models.ImageField('Аватар', null=True, upload_to='media/api/teams/static/images')
@@ -54,19 +62,28 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Команда'
+        verbose_name_plural = 'Команды'
+
 
 class Tournament(models.Model):
     img = models.ImageField('Аватар', null=True, upload_to='media/api/tournaments/static/images')
     name = models.CharField('Название', max_length=255)
-    members = models.ManyToManyField(Team, verbose_name='Команда', through='Membership', null=True)
+    members = models.ManyToManyField(Team, verbose_name='Команда', through='Membership')
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Турнир'
+        verbose_name_plural = 'Турниры'
+
 
 class Membership(models.Model):
     team = models.ForeignKey(Team, verbose_name='Команда', on_delete=models.DO_NOTHING)
-    tournament = models.ForeignKey(Tournament, verbose_name='Турнир', related_name='member_detail', on_delete=models.DO_NOTHING)
+    tournament = models.ForeignKey(Tournament, verbose_name='Турнир', related_name='member_detail',
+                                   on_delete=models.DO_NOTHING)
     goals_amount = models.IntegerField('Количество голов', default=0)
     miss_amount = models.IntegerField('Пропущенные', default=0)
     wins_amount = models.IntegerField('Победы', default=0)
@@ -78,17 +95,40 @@ class Membership(models.Model):
     def __str__(self):
         return self.team.name + " " + self.tournament.name
 
+    class Meta:
+        verbose_name = 'Участник'
+        verbose_name_plural = 'Участники'
+        ordering = ['score']
+
+
+class Tour(models.Model):
+    name = models.CharField('Название', max_length=255)
+    tournament = models.ForeignKey(Tournament, verbose_name='Турнир', related_name='tour',
+                                   on_delete=models.DO_NOTHING, null=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Тур'
+        verbose_name_plural = 'Туры'
+
 
 class Match(models.Model):
     date = models.DateField(verbose_name='Дата', default=date.today)
-    tournament = models.ForeignKey(Tournament, verbose_name='Турнир', on_delete=models.DO_NOTHING)
     team1 = models.ForeignKey(Team, verbose_name='Команда1', related_name='team1', on_delete=models.DO_NOTHING)
     team2 = models.ForeignKey(Team, verbose_name='Команда2', related_name='team2', on_delete=models.DO_NOTHING)
     team1_goals = models.IntegerField('голы команды 1', default=0)
     team2_goals = models.IntegerField('голы команды 2', default=0)
+    tour = models.ForeignKey(Tour, verbose_name='Тур', related_name='matches',
+                             on_delete=models.DO_NOTHING, null=True)
 
     def __str__(self):
         return self.team1.name + " " + self.team2.name
+
+    class Meta:
+        verbose_name = 'Матч'
+        verbose_name_plural = 'Матчи'
 
     def object_update(self, team, goals, miss, wins, draws, defeats):
         team.goals_amount = goals
@@ -152,27 +192,30 @@ class Match(models.Model):
         self.object_update(team, goals, miss, wins, draws, defeats)
 
         tournaments = Tournament.objects.all()
+        tours = Tour.objects.all()
         for tournament in tournaments:
             goals, miss, wins, draws, defeats = [0 for i in range(5)]
             try:
-                for match in matches.filter(team1=self.team1.id, tournament=tournament.id):
-                    goals += match.team1_goals
-                    miss += match.team2_goals
-                    if match.team1_goals > match.team2_goals:
-                        wins += 1
-                    elif match.team1_goals == match.team2_goals:
-                        draws += 1
-                    else:
-                        defeats += 1
-                for match in matches.filter(team2=self.team1.id, tournament=tournament.id):
-                    goals += match.team2_goals
-                    miss += match.team1_goals
-                    if match.team2_goals > match.team1_goals:
-                        wins += 1
-                    elif match.team2_goals == match.team1_goals:
-                        draws += 1
-                    else:
-                        defeats += 1
+                for tour in tours.filter(tournament=tournament):
+
+                    for match in matches.filter(team1=self.team1.id, tour=tour.id):
+                        goals += match.team1_goals
+                        miss += match.team2_goals
+                        if match.team1_goals > match.team2_goals:
+                            wins += 1
+                        elif match.team1_goals == match.team2_goals:
+                            draws += 1
+                        else:
+                            defeats += 1
+                    for match in matches.filter(team2=self.team1.id, tour=tour.id):
+                        goals += match.team2_goals
+                        miss += match.team1_goals
+                        if match.team2_goals > match.team1_goals:
+                            wins += 1
+                        elif match.team2_goals == match.team1_goals:
+                            draws += 1
+                        else:
+                            defeats += 1
 
                 membership = Membership.objects.get(team=self.team1.id, tournament=tournament.id)
                 self.object_update(membership, goals, miss, wins, draws, defeats)
@@ -182,24 +225,26 @@ class Match(models.Model):
         for tournament in tournaments:
             goals, miss, wins, draws, defeats = [0 for i in range(5)]
             try:
-                for match in matches.filter(team1=self.team2.id, tournament=tournament.id):
-                    goals += match.team1_goals
-                    miss += match.team2_goals
-                    if match.team1_goals > match.team2_goals:
-                        wins += 1
-                    elif match.team1_goals == match.team2_goals:
-                        draws += 1
-                    else:
-                        defeats += 1
-                for match in matches.filter(team2=self.team2.id, tournament=tournament.id):
-                    goals += match.team2_goals
-                    miss += match.team1_goals
-                    if match.team2_goals > match.team1_goals:
-                        wins += 1
-                    elif match.team2_goals == match.team1_goals:
-                        draws += 1
-                    else:
-                        defeats += 1
+                for tour in tours.filter(tournament=tournament):
+
+                    for match in matches.filter(team1=self.team2.id, tour=tour.id):
+                        goals += match.team1_goals
+                        miss += match.team2_goals
+                        if match.team1_goals > match.team2_goals:
+                            wins += 1
+                        elif match.team1_goals == match.team2_goals:
+                            draws += 1
+                        else:
+                            defeats += 1
+                    for match in matches.filter(team2=self.team2.id, tour=tour.id):
+                        goals += match.team2_goals
+                        miss += match.team1_goals
+                        if match.team2_goals > match.team1_goals:
+                            wins += 1
+                        elif match.team2_goals == match.team1_goals:
+                            draws += 1
+                        else:
+                            defeats += 1
 
                 membership = Membership.objects.get(team=self.team2.id, tournament=tournament.id)
                 self.object_update(membership, goals, miss, wins, draws, defeats)
