@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Player, Team, Tournament, Membership, Match, Tour
+from .models import Post, Player, Team, Tournament, Membership, Match, Tour, Slide
 
 
 class MembershipInline(admin.TabularInline):
@@ -36,3 +36,4 @@ admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Membership)
 admin.site.register(Match)
 admin.site.register(Tour, TourAdmin)
+admin.site.register(Slide)

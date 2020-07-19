@@ -120,7 +120,7 @@ class Match(models.Model):
     team2 = models.ForeignKey(Team, verbose_name='Команда2', related_name='team2', on_delete=models.DO_NOTHING)
     team1_goals = models.IntegerField('голы команды 1', default=0)
     team2_goals = models.IntegerField('голы команды 2', default=0)
-    tour = models.ForeignKey(Tour, verbose_name='Тур', related_name='matches',
+    tour = models.ForeignKey(Tour, verbose_name='Тур', related_name='tour_data',
                              on_delete=models.DO_NOTHING, null=True)
 
     def __str__(self):
@@ -250,3 +250,9 @@ class Match(models.Model):
                 self.object_update(membership, goals, miss, wins, draws, defeats)
             except:
                 pass
+
+
+class Slide(models.Model):
+    text = models.TextField('Текст', blank=True, default='')
+    img = models.ImageField('Обложка', null=True, upload_to='media/api/teams/static/images')
+    url = models.URLField('Ссылка', blank=True, default='')
