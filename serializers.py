@@ -6,7 +6,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'text', 'createdAt')
+        fields = ('id', 'title', 'text', 'createdAt', 'logo', 'img')
 
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -49,6 +49,7 @@ class MembershipSerializer(serializers.ModelSerializer):
         model = Membership
         fields = ('id', 'team', 'tournament', 'goals_amount', 'miss_amount', 'wins_amount',
                   'draws_amount', 'defeats_amount', 'score', 'difference')
+        depth = 2
 
 
 class TournamentSerializer(serializers.ModelSerializer):

@@ -191,20 +191,13 @@ def tournaments_detail(request, id):
     """
     Retrieve a tournament by id.
     """
-    # serializered_tour, tours, serializered_match = None, None, None
     try:
         tournament = Tournament.objects.get(id=id)
     except Tournament.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    # for i in tournament.tour:
-
     if request.method == 'GET':
         serializered = TournamentSerializer(tournament, context={'request': request})
-        # tours = Tour.objects.filter(tournament=id)
-        # serializered_tour = TourSerializer(tours, context={'request': request})
-        # matches = Match.objects.filter(tour=tour.id)
-        # serializered_match = MatchSerializer(matches, context={'request': request})
-        return Response({'data': [serializered.data]})
+        return Response({'data': serializered.data})
 
 
 @api_view(['GET'])
@@ -279,3 +272,15 @@ def matches_detail(request, id):
     if request.method == 'GET':
         serializer = MatchSerializer(match, context={'request': request})
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+def slides_list(request):
+    """
+    List of slides.
+    """
+    if request.method == 'GET':
+        slides = Slide.objects.all()
+        serializer = SlideSerializer(slides, context={'request': request}, many=True)
+
+        return Response({'data': serializer.data})

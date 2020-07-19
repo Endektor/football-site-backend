@@ -7,6 +7,8 @@ class Post(models.Model):   # новость
     title = models.CharField('Заголовок', max_length=255)
     text = models.TextField('Текст')
     createdAt = models.DateField('Дата создания', auto_now_add=True)
+    logo = models.ImageField('Лого', null=True, upload_to='media/api/posts/static/images')
+    img = models.ImageField('Картинка', null=True, upload_to='media/api/posts/static/images')
 
     def __str__(self):
         return self.title
@@ -256,3 +258,10 @@ class Slide(models.Model):
     text = models.TextField('Текст', blank=True, default='')
     img = models.ImageField('Обложка', null=True, upload_to='media/api/teams/static/images')
     url = models.URLField('Ссылка', blank=True, default='')
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        verbose_name = 'Слайд'
+        verbose_name_plural = 'Слайды'
