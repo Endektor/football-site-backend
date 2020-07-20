@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import date
-from django.db.models import Q
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 
 class Post(models.Model):   # новость
@@ -252,6 +253,61 @@ class Match(models.Model):
                 self.object_update(membership, goals, miss, wins, draws, defeats)
             except:
                 pass
+
+
+@receiver(pre_delete, sender=Match)
+def match_pre_delete(sender, **kwargs):
+    match = kwargs['instance']
+    team1 = match.team1
+    team2 = match.team2
+    tour = match.tour
+    wins, draws, defeats = [0 for i in range(3)]
+
+    if match.team1_goals > match.team2_goals:
+        wins = 1
+    elif match.team1_goals == match.team2_goals:
+        draws = 1
+    else:
+        defeats = 1
+
+    match.object_update(team1,
+                        team1.goals_amount - match.team1_goals,
+                        team1.miss_amount - match.team2_goals,
+                        team1.wins_amount - wins,
+                        team1.draws_amount - draws,
+                        team1.defeats_amount - defeats)
+
+    membership = Membership.objects.get(team=team1.id, tournament=tour.tournament.id)
+    match.object_update(membership,
+                        membership.goals_amount - match.team1_goals,
+                        membership.miss_amount - match.team2_goals,
+                        membership.wins_amount - wins,
+                        membership.draws_amount - draws,
+                        membership.defeats_amount - defeats)
+
+    wins, draws, defeats = [0 for i in range(3)]
+
+    if match.team2_goals > match.team1_goals:
+        wins = 1
+    elif match.team2_goals == match.team1_goals:
+        draws = 1
+    else:
+        defeats = 1
+
+    match.object_update(team2,
+                        team2.goals_amount - match.team2_goals,
+                        team2.miss_amount - match.team1_goals,
+                        team2.wins_amount - wins,
+                        team2.draws_amount - draws,
+                        team2.defeats_amount - defeats)
+
+    membership = Membership.objects.get(team=team2.id, tournament=tour.tournament.id)
+    match.object_update(membership,
+                        membership.goals_amount - match.team2_goals,
+                        membership.miss_amount - match.team1_goals,
+                        membership.wins_amount - wins,
+                        membership.draws_amount - draws,
+                        membership.defeats_amount - defeats)
 
 
 class Slide(models.Model):
