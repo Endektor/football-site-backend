@@ -2,6 +2,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
+from django.views.generic import View
+from django.http import HttpResponse
+from django.conf import settings
+import os
+
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Post, Player, Team, Tournament, Membership, Match, Tour
 from .serializers import *
@@ -284,3 +289,21 @@ def slides_list(request):
         serializer = SlideSerializer(slides, context={'request': request}, many=True)
 
         return Response({'data': serializer.data})
+
+
+class ReactAppView(View):
+
+    def get(self, request):
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+        try:
+            with open(os.path.join(BASE_DIR, 'frontend', 'build', 'index.html')) as file:
+                return HttpResponse(file.read())
+
+        except:
+            return HttpResponse(
+                """
+                index.html not found ! build your React app !!
+                """,
+                status=501,
+            )

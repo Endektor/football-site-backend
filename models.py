@@ -9,7 +9,7 @@ class Post(models.Model):   # новость
     text = models.TextField('Текст')
     createdAt = models.DateField('Дата создания', auto_now_add=True)
     logo = models.ImageField('Лого', null=True, upload_to='media/api/posts/static/images')
-    img = models.ImageField('Картинка', null=True, upload_to='media/api/posts/static/images')
+    url = models.URLField('Ссылка', blank=True, default='')
 
     def __str__(self):
         return self.title
