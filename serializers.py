@@ -6,7 +6,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'text', 'createdAt', 'logo', 'img')
+        fields = ('id', 'title', 'text', 'createdAt', 'logo', 'url')
 
 
 class PlayerSerializer(serializers.ModelSerializer):
