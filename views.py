@@ -196,13 +196,27 @@ def tournaments_detail(request, id):
     """
     Retrieve a tournament by id.
     """
+    print(id)
     try:
-        tournament = Tournament.objects.get(id=id)
+        tournament = Tournament.objects.get(url_name=id)
     except Tournament.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
         serializered = TournamentSerializer(tournament, context={'request': request})
         return Response({'data': serializered.data})
+
+
+@api_view(['GET'])
+def tournaments_names_list(request):
+    """
+    List of tournaments names.
+    """
+    if request.method == 'GET':
+        data = []
+        tournaments = Tournament.objects.all()
+        serializer = TournamentNamesSerializer(tournaments, context={'request': request}, many=True)
+
+        return Response({'data': serializer.data})
 
 
 @api_view(['GET'])

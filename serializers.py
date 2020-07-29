@@ -58,8 +58,15 @@ class TournamentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tournament
-        fields = ('id', 'img', 'name', 'members', 'member_detail', 'tour')
+        fields = ('id', 'img', 'name', 'url_name', 'members', 'member_detail', 'tour')
         depth = 2
+
+
+class TournamentNamesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tournament
+        fields = ('id', 'name', 'url_name')
 
 
 class SlideSerializer(serializers.ModelSerializer):

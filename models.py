@@ -2,6 +2,7 @@ from django.db import models
 from datetime import date
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
+import transliterate
 
 
 class Post(models.Model):   # новость
@@ -73,6 +74,7 @@ class Team(models.Model):
 class Tournament(models.Model):
     img = models.ImageField('Аватар', null=True, upload_to='media/api/tournaments/static/images')
     name = models.CharField('Название', max_length=255)
+    url_name = models.CharField('Название для ссылки', max_length=255, blank=True)
     members = models.ManyToManyField(Team, verbose_name='Команда', through='Membership')
 
     def __str__(self):
@@ -81,6 +83,12 @@ class Tournament(models.Model):
     class Meta:
         verbose_name = 'Турнир'
         verbose_name_plural = 'Турниры'
+
+    def save(self, *args, **kwargs):
+        self.url_name = transliterate.slugify(str(self.name))
+        print(args)
+        print(kwargs)
+        super(Tournament, self).save(*args, **kwargs)
 
 
 class Membership(models.Model):
